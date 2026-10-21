@@ -773,8 +773,9 @@ mod host {
                     Some("wordcraft:picked") => {
                         let Some(id) = number(&data, "id") else { return };
                         let Some(tx) = pending.borrow_mut().remove(&id) else { return };
-                        // The app polls for the answer each frame; a closed app just drops it.
-                        let _ = tx.send(Ok(string(&data, "path").filter(|p| !p.trim().is_empty())));
+                        // The app polls for the answer each frame (no path: cancelled); a closed app just
+                        // drops it.
+                        let _ = tx.send(Ok(string(&data, "path").filter(|p| !p.trim().is_empty()).into_iter().collect()));
                     }
                     _ => return,
                 }
