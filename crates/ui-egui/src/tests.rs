@@ -4077,6 +4077,20 @@ fn host_saves_go_back_to_the_opened_file() {
     assert!(got.iter().all(|(_, _, len)| *len > 0));
 }
 
+/// File › Save As › Browse… is Save As for the page too, under the opened file's own name as
+/// well: the page asks where to keep it instead of the save going back over the opened file.
+#[test]
+fn host_backstage_save_as_is_save_as() {
+    let (mut a, got) = host_app(false);
+    // The web build answers the save dialog with the suggested name.
+    a.services.pick_save = Some(Box::new(|name: &str| Some(name.to_string())));
+    host_open(&mut a, "report.docx");
+    let _ = a.save_as(crate::file_dialogs::AfterSave::Nothing);
+    let calls: Vec<(String, bool)> = got.borrow().iter().map(|(n, s, _)| (n.clone(), *s)).collect();
+    assert_eq!(calls, [("report.docx".to_string(), true)]);
+    assert!(!a.session.dirty);
+}
+
 /// A Markdown file goes back as Markdown, which doesn't keep everything: the document stays
 /// unsaved, as on the desktop.
 #[test]

@@ -327,7 +327,11 @@ impl WordApp {
                 // otherwise dropped: a failed write (no permission, disk full, a bad path) left the
                 // Save As page sitting there with nothing to say why, since its own render loop
                 // skips the status bar while Backstage is open. `fail_save_as` reaches both.
-                let result = picked.map(|path| self.run("file.save", json!({"path": path})));
+                // A page that keeps the files (`Services::host_save`) must hear this as Save As, even
+                // under the opened file's own name: as a plain Save it would go back over that file
+                // without the page asking where.
+                let command = if self.services.host_save.is_some() { "file.saveAs" } else { "file.save" };
+                let result = picked.map(|path| self.run(command, json!({"path": path})));
                 let saved = matches!(&result, Some(Ok(v)) if v.get("saved").and_then(Value::as_bool) == Some(true) || v.get("downloaded").is_some());
                 if saved {
                     self.ui.backstage = false;
